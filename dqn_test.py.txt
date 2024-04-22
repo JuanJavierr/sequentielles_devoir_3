@@ -1,0 +1,176 @@
+import random
+import math
+
+# Défiler tout en bas pour voir les tests
+# Défiler tout en bas pour voir les tests
+# Défiler tout en bas pour voir les tests
+
+class DQN:
+    """
+        Initialize the DQN object with the following parameters:
+        - state_dim: The dimensionality of the state space.
+        - action_dim: The dimensionality of the action space.
+        - hidden_dims: A list containing the number of neurons in each hidden layer.
+        - lr: The learning rate for the DQN.
+        - gamma: The discount factor for future rewards.
+    """
+    def __init__(self, state_dim, action_dim, hidden_dims, lr=0.05, gamma=0.99):
+        self.state_dim = state_dim
+        self.action_dim = action_dim
+        self.hidden_dims = hidden_dims
+        self.num_layers = len(hidden_dims)
+        self.lr = lr
+        self.gamma = gamma
+
+        # Neural Network
+        self.weights = []
+        previous_dim = state_dim
+
+        for hidden_dim in hidden_dims:
+            self.weights.append([[random.uniform(-1, 1) for _ in range(hidden_dim)] for _ in range(previous_dim)])
+            previous_dim = hidden_dim
+
+        # Final layer should have dimensionality matching action space
+        self.weights.append([[random.uniform(-1, 1) for _ in range(action_dim)] for _ in range(previous_dim)])
+
+    def forward(self, state):
+        """
+        Forward pass through the network. Accepts a state as input and returns the action values as output.
+        """
+        self.a = []
+        self.z = []
+    
+        if isinstance(state, int):
+            state_list = [0]*self.state_dim
+            state_list[state] = 1
+            state = state_list
+    
+        if not isinstance(state, list):  # Ensure state is always a list
+            state = [state]
+            
+        self.a.append(state)
+    
+        for i in range(len(self.weights)):
+            self.z.append(self.dot(self.a[-1], self.weights[i]))
+            self.a.append([self.relu(x) for x in self.z[-1]])
+    
+        return self.a[-1][0:self.action_dim]
+    
+    def backward(self, state, action, target):
+        """
+        Backward pass through the network. Accepts a state, action, and target as inputs and updates the weights of the network.
+        """
+        if not isinstance(state, list):  # Ensure state is always a list
+            state = [state]
+    
+        self.a = [state, ] + self.a
+        deltas = [[0]*len(layer) for layer in self.weights]  # Initialize deltas
+    
+        # Compute output layer delta
+        deltas[-1] = [0]*len(self.weights[-1])  # Initialize last layer delta
+        deltas[-1][action] = target - self.a[-1][action]
+    
+        # Backpropagate deltas
+        for i in reversed(range(len(self.weights) - 1)):  # Start from the end, excluding the last layer
+            for k in range(len(self.weights[i+1])):  # For each neuron in the next layer
+                for j in range(len(self.weights[i+1][k])):  # For each neuron in the current layer
+                    if j < len(self.a[i+1]):
+                        deltas[i][j] += deltas[i+1][k] * self.weights[i+1][k][j] * (self.a[i+1][j] > 0)  # Apply ReLU derivative
+    
+        # Update weights
+        for i in range(len(self.weights)):
+            for j in range(len(self.weights[i])):
+                for k in range(len(self.weights[i][j])):
+                    if j < len(self.a[i]) and k < len(deltas[i]):
+                        self.weights[i][j][k] += self.lr * self.a[i][j] * deltas[i][k]  # Update weights using the deltas
+    
+    
+    def update(self, state, action, reward, next_state):
+        """
+        Update the network given a state, action, reward, and the next state.
+        """
+        forward_state = self.forward(state)
+        future_rewards = max(self.forward(next_state))
+        target = reward + self.lr * (reward + self.gamma * future_rewards - forward_state[action])
+        self.backward(state, action, target)
+
+
+    def get_action(self, state, epsilon):
+        """
+        Select an action for a given state using epsilon-greedy action selection.
+        """
+        forward_state = self.forward(state)
+        if random.uniform(0, 1) < epsilon:
+            return random.randint(0, self.action_dim-1)
+        else:
+            return forward_state.index(max(forward_state))
+            
+            
+    def dot(self, a, b):
+        """
+        Dot product operation.
+        """
+        # If 'a' and 'b' are 1D lists
+        if not any(isinstance(i, list) for i in a) and not any(isinstance(i, list) for i in b):
+                return sum(x*y for x, y in zip(a, b))
+        
+        # If 'a' and 'b' are 2D lists
+        elif all(isinstance(i, list) for i in a) and all(isinstance(i, list) for i in b):
+            b_t = list(map(list, zip(*b))) # Transpose b
+            return [[sum(x*y for x, y in zip(row_a, row_b)) for row_b in b_t] for row_a in a]
+        
+        # 'b' is a 2D list, 'a' is a 1D list
+        elif all(isinstance(i, list) for i in b):
+            return [sum(x*y for x, y in zip(a, neuron_weights)) for neuron_weights in b]
+        
+        # 'b' is a 1D list, 'a' is a 1D list
+        else:
+            return sum(x*y for x, y in zip(a, b))
+            
+    def relu(self, x):
+        """
+        ReLU (Rectified Linear Unit) activation function.
+        """
+        return max(0, x)
+    
+    def outer(self, a, b):
+        """
+        Outer product operation.
+        """
+        if isinstance(b, float):
+            return [[x*b for _ in range(len(a))] for x in a]
+        else:
+            return [[x*y for y in b] for x in a]
+    
+    def sigmoid(self, x):
+        """
+        Sigmoid activation function.
+        """
+        return [1 / (1 + math.exp(-xi)) for xi in x]
+
+
+
+"""
+We expect the forward pass for a random state with randomly initialized weights
+to return a list of 4 random values between 0 and 1. This is only the case
+for states with IDs smaller than the number of hidden layers. For states with
+IDs greater than the number of hidden layers, the forward pass returns a list of 4 zeros
+"""
+
+dqn = DQN(20, 4, [5, 5])
+print("With 20 states, 4 actions and 2 hidden layers of 5 neurons each, the forward pass results are:")
+for state in range(20):
+    print("Forward pass result for state " + str(state) + " :" + str(dqn.forward(state)))
+
+
+dqn = DQN(20, 4, [10, 10])
+print("With 20 states, 4 actions and 2 hidden layers of 10 neurons each, the forward pass results are:")
+for state in range(20):
+    print("Forward pass result for state " + str(state) + " :" + str(dqn.forward(state)))
+
+
+dqn = DQN(20, 4, [20, 20])
+print("With 20 states, 4 actions and 2 hidden layers of 20 neurons each, the forward pass results are:")
+for state in range(20):
+    print("Forward pass result for state " + str(state) + " :" + str(dqn.forward(state)))
+
