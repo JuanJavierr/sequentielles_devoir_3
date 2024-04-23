@@ -146,16 +146,16 @@ class DQN:
         
         # 'b' is a 2D list, 'a' is a 1D list
         elif all(isinstance(i, list) for i in b):
-            output = []
-            i = 0
-            for neuron_weights in b:
-                i += 1
-                summation = 0
-                for x, y in zip(a, neuron_weights):
-                    summation += x*y
-                output.append(summation)
-            return output
-            # return [sum(x*y for x, y in zip(a, neuron_weights)) for neuron_weights in b]
+            # output = []
+            # i = 0
+            # for neuron_weights in b:
+            #     i += 1
+            #     summation = 0
+            #     for x, y in zip(a, neuron_weights):
+            #         summation += x*y
+            #     output.append(summation)
+            # return output
+            return [sum(x*y for x, y in zip(a, neuron_weights)) for neuron_weights in b]
         
         # 'b' is a 1D list, 'a' is a 1D list
         else:
