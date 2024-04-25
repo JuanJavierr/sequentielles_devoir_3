@@ -1,0 +1,63 @@
+******** Q-LEARNING ********
+Output of train_qlearning:
+
+WoW!, episode: 0 reward: 93 steps: 15
+WoW!, episode: 1 reward: 90 steps: 32
+WoW!, episode: 2 reward: 100 steps: 8
+WoW!, episode: 3 reward: 93 steps: 119
+WoW!, episode: 4 reward: 96 steps: 46
+WoW!, episode: 5 reward: 97 steps: 15
+WoW!, episode: 6 reward: 100 steps: 8
+WoW!, episode: 7 reward: 100 steps: 8
+WoW!, episode: 8 reward: 100 steps: 8
+WoW!, episode: 9 reward: 100 steps: 8
+WoW!, episode: 10 reward: 100 steps: 8
+WoW!, episode: 11 reward: 100 steps: 8
+WoW!, episode: 12 reward: 100 steps: 8
+WoW!, episode: 13 reward: 100 steps: 8
+WoW!, episode: 14 reward: 100 steps: 8
+
+Output of test_policy_robot:
+
+Action taken 3
+Action taken 0
+Action taken 3
+Action taken 0
+Action taken 0
+Action taken 1
+Action taken 1
+Action taken 0
+The robot has successfully reached to the exit!
+
+******** DQN ********
+Output of train_dqn:
+
+WoW!, episode: 0 reward: -443 steps: 1055
+WoW!, episode: 1 reward: -125 steps: 319
+WoW!, episode: 2 reward: -520 steps: 806
+WoW!, episode: 3 reward: -64 steps: 326
+WoW!, episode: 4 reward: -662 steps: 1288
+WoW!, episode: 5 reward: -228 steps: 452
+WoW!, episode: 6 reward: 58 steps: 90
+WoW!, episode: 7 reward: -828 steps: 1424
+WoW!, episode: 8 reward: -276 steps: 562
+WoW!, episode: 9 reward: -188 steps: 432
+WoW!, episode: 10 reward: 12 steps: 178
+WoW!, episode: 11 reward: -52 steps: 188
+WoW!, episode: 12 reward: -189 steps: 405
+WoW!, episode: 13 reward: 13 steps: 139
+WoW!, episode: 14 reward: -72 steps: 256
+
+Output of test_policy_robot:
+
+Action taken 3
+Action taken 0
+Action taken 0
+Action taken 0
+Action taken 0
+Action taken 0
+Action taken 0
+Action taken 0
+Action taken 0
+Action taken 0
+The robot is stuck in the maze.
