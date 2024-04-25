@@ -6,7 +6,6 @@ Main functions: train_qlearning, train_dqn, test_policy_robot
 
 # import codey, event, rocky # uncomment this line when running on the robot
 import time, random, math
-from collections import deque
 import matplotlib.pyplot as plt
 
 """
@@ -100,7 +99,10 @@ class DQN:
         # Final layer should have dimensionality matching action space
         self.weights.append([[random.uniform(-1, 1) for _ in range(action_dim)] for _ in range(previous_dim)])
 
-    def forward(self, state):
+
+        self.target_weights = self.weights.copy()
+
+    def forward(self, state, use_target=False):
         """
         Forward pass through the network. Accepts a state as input and returns the action values as output.
         """
@@ -117,8 +119,14 @@ class DQN:
 
         self.a.append(state)
 
-        for i in range(len(self.weights)):
-            self.z.append(self.dot(self.a[-1], self.weights[i]))
+
+        if use_target:
+            weights = self.target_weights
+        else:
+            weights = self.weights
+
+        for i in range(len(weights)):
+            self.z.append(self.dot(self.a[-1], weights[i]))
             self.a.append([self.relu(x) for x in self.z[-1]])
 
         return self.a[-1][0:self.action_dim]
@@ -158,7 +166,8 @@ class DQN:
         """
         forward_state = self.forward(state)
         self.q_table[state] = forward_state # new line added: update the q-values for the specific state
-        future_rewards = max(self.forward(next_state))
+        future_rewards = max(self.forward(next_state, use_target=True))
+
         target = reward + self.lr * (reward + self.gamma * future_rewards - forward_state[action])
         self.backward(state, action, target)
 
@@ -237,7 +246,7 @@ def move_robot(last_action: int, action: int):
 
     codey.display.show(action)
     rocky.forward(8, 1)
-    print(f'Action taken {action}')
+    print('Action taken: ' + str(action))
     time.sleep(1)
 
 
@@ -325,7 +334,7 @@ def train_qlearning():
 
   global q_learning
 
-  num_episodes = 15
+  num_episodes = 200
   total_rewards = []
   steps = []
 
@@ -360,7 +369,7 @@ def train_qlearning():
               steps.append(number_steps)
 
   plt.title("Total Rewards in Episodes (Q-Learning)")
-  plt.plot(range(0,num_episodes), total_rewards, '-bo')
+  plt.plot(range(0,num_episodes), total_rewards, '-')
   plt.show()
 
   plt.title("Number of Steps in Episodes (Q-Learning)")
@@ -375,7 +384,7 @@ def train_dqn():
   "Training stage of the Robot in the Maze using DQN"
   global dqn
 
-  num_episodes = 15
+  num_episodes = 200
   total_rewards = []
   steps = []
 
@@ -407,12 +416,13 @@ def train_dqn():
         print("WoW!, episode:", _, "reward:", total_reward, "steps:", number_steps)
         total_rewards.append(total_reward)
         steps.append(number_steps)
+        dqn.target_weights = dqn.weights.copy() # on episode end, update target weights
 
-      if number_steps % 100 == 0:
+      if number_steps % 50 == 0: # update target weights every 50 steps
         dqn.target_weights = dqn.weights.copy()
 
   plt.title("Total Rewards in Episodes (DQN)")
-  plt.plot(range(0,num_episodes), total_rewards, '-bo')
+  plt.plot(range(0,num_episodes), total_rewards, '-')
   plt.show()
 
   plt.title("Number of Steps in Episodes (DQN)")
@@ -451,7 +461,7 @@ def test_policy_robot(q_table):
     iterations += 1
 
     if is_done:
-      print("The robot has successfully reached to the exit!")
+      print("The robot has successfully reached the exit!")
       rocky.stop()
       codey.display.show("WoW!")
       codey.led.set_green(255)
